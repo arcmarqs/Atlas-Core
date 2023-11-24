@@ -190,7 +190,7 @@ impl TimeoutWorker {
                 self.handle_message_timeout_request(message, Some(TimeoutPhase::TimedOut(phase + 1, Instant::now())));
             }
 
-            if let Err(_) = self.loopback_channel.send(Message::Timeout(to_time_out)) {
+            if let Err(_) = self.loopback_channel.send_return(Message::Timeout(to_time_out)) {
                 info!("Loopback channel has disconnected, disconnecting timeouts thread");
             }
         }

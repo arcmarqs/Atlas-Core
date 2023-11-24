@@ -114,7 +114,7 @@ impl Timeouts {
             .map(|rq_info| TimeoutKind::ClientRequestTimeout(rq_info))
             .collect();
 
-        let res = self.handle.try_send(TimeoutMessage::TimeoutRequest(RqTimeoutMessage {
+        let res = self.handle.try_send_return(TimeoutMessage::TimeoutRequest(RqTimeoutMessage {
             timeout,
             // we choose 1 here because we only need to receive one valid pre prepare containing
             // this request for it to be considered valid
@@ -133,7 +133,7 @@ impl Timeouts {
     /// Notify that a pre prepare with the following requests has been received and we must therefore
     /// Disable any timeouts pertaining to the received requests
     pub fn received_pre_prepare(&self, from: NodeId, recvd_rqs: Vec<ClientRqInfo>) {
-        let res = self.handle.try_send(TimeoutMessage::MessagesReceived(
+        let res = self.handle.try_send_return(TimeoutMessage::MessagesReceived(
             ReceivedRequest::PrePrepareRequestReceived(from, recvd_rqs)
         ));
 
@@ -147,20 +147,20 @@ impl Timeouts {
 
     /// Set the timeout phase of all timeouts to the initial state (0 timeouts) and re call all of the timeouts
     pub fn reset_all_client_rq_timeouts(&self, duration: Duration) {
-        self.handle.send(TimeoutMessage::ResetClientTimeouts(duration)).expect("Failed to contact timeout thread")
+        self.handle.send_return(TimeoutMessage::ResetClientTimeouts(duration)).expect("Failed to contact timeout thread")
     }
 
     /// Cancel timeouts of player requests.
     /// This accepts an option. If this Option is None, then the
     /// timeouts for all client requests are going to be disabled
     pub fn cancel_client_rq_timeouts(&self, requests_to_clear: Option<Vec<ClientRqInfo>>) {
-        self.handle.send(TimeoutMessage::ClearClientTimeouts(requests_to_clear))
+        self.handle.send_return(TimeoutMessage::ClearClientTimeouts(requests_to_clear))
             .expect("Failed to contact timeout thread")
     }
 
     /// Timeout a CST request
     pub fn timeout_cst_request(&self, timeout: Duration, requests_needed: u32, seq_no: SeqNo) {
-        self.handle.send(TimeoutMessage::TimeoutRequest(RqTimeoutMessage {
+        self.handle.send_return(TimeoutMessage::TimeoutRequest(RqTimeoutMessage {
             timeout,
             notifications_needed: requests_needed,
             timeout_info: vec![TimeoutKind::Cst(seq_no)],
@@ -168,7 +168,7 @@ impl Timeouts {
     }
 
     pub fn timeout_lt_request(&self, timeout: Duration, requests_needed: u32, seq_no: SeqNo) {
-        self.handle.send(TimeoutMessage::TimeoutRequest(RqTimeoutMessage {
+        self.handle.send_return(TimeoutMessage::TimeoutRequest(RqTimeoutMessage {
             timeout,
             notifications_needed: requests_needed,
             timeout_info: vec![TimeoutKind::LogTransfer(seq_no)],
@@ -176,7 +176,7 @@ impl Timeouts {
     }
 
     pub fn timeout_reconfig_request(&self, timeout: Duration, requests_needed: u32, seq_no: SeqNo) {
-        self.handle.send(TimeoutMessage::TimeoutRequest(RqTimeoutMessage {
+        self.handle.send_return(TimeoutMessage::TimeoutRequest(RqTimeoutMessage {
             timeout,
             notifications_needed: requests_needed,
             timeout_info: vec![TimeoutKind::Reconfiguration(seq_no)],
@@ -185,20 +185,20 @@ impl Timeouts {
 
     /// Handle having received a cst request
     pub fn received_cst_request(&self, from: NodeId, seq_no: SeqNo) {
-        self.handle.send(TimeoutMessage::MessagesReceived(
+        self.handle.send_return(TimeoutMessage::MessagesReceived(
             ReceivedRequest::Cst(from, seq_no)))
             .expect("Failed to contact timeout thread");
     }
 
     /// Handle having received a cst request
     pub fn received_log_request(&self, from: NodeId, seq_no: SeqNo) {
-        self.handle.send(TimeoutMessage::MessagesReceived(
+        self.handle.send_return(TimeoutMessage::MessagesReceived(
             ReceivedRequest::LT(from, seq_no)))
             .expect("Failed to contact timeout thread");
     }
 
     pub fn received_reconfig_request(&self, from: NodeId, seq_no: SeqNo) {
-        self.handle.send(TimeoutMessage::MessagesReceived(
+        self.handle.send_return(TimeoutMessage::MessagesReceived(
             ReceivedRequest::Reconfiguration(from, seq_no)))
             .expect("Failed to contact timeout thread");
     }
@@ -207,13 +207,13 @@ impl Timeouts {
     /// This accepts an option. If this Option is None, then the
     /// timeouts for all CST requests are going to be disabled.
     pub fn cancel_cst_timeout(&self, seq_no: Option<SeqNo>) {
-        self.handle.send(TimeoutMessage::ClearCstTimeouts(seq_no))
+        self.handle.send_return(TimeoutMessage::ClearCstTimeouts(seq_no))
             .expect("Failed to contact timeout thread");
     }
 
     /// Cancel timeouts of reconfig messages
     pub fn cancel_reconfig_timeout(&self, seq_no: Option<SeqNo>) {
-        self.handle.send(TimeoutMessage::ClearReconfigTimeouts(seq_no))
+        self.handle.send_return(TimeoutMessage::ClearReconfigTimeouts(seq_no))
             .expect("Failed to contact timeout thread")
     }
 }
@@ -258,17 +258,17 @@ impl<WP, D> TimeoutOrchestrator<WP, D> {
                 }
                 TimeoutMessage::ResetClientTimeouts(duration) => {
                     for work_channel in &self.worker_channel {
-                        work_channel.send(TimeoutWorkerMessage::ResetClientTimeouts(duration)).expect("Failed to send worker message")
+                        work_channel.send_return(TimeoutWorkerMessage::ResetClientTimeouts(duration)).expect("Failed to send worker message")
                     }
                 }
                 TimeoutMessage::ClearClientTimeouts(clear_timeouts) => {
                     self.handle_clear_client_timeouts(clear_timeouts);
                 }
                 TimeoutMessage::ClearCstTimeouts(seq) => {
-                    self.worker_channel[0].send(TimeoutWorkerMessage::ClearCstTimeouts(seq)).expect("Failed to contact worker");
+                    self.worker_channel[0].send_return(TimeoutWorkerMessage::ClearCstTimeouts(seq)).expect("Failed to contact worker");
                 }
                 TimeoutMessage::ClearReconfigTimeouts(seq) => {
-                    self.worker_channel[0].send(TimeoutWorkerMessage::ClearReconfigTimeouts(seq)).expect("Failed to contact worker")
+                    self.worker_channel[0].send_return(TimeoutWorkerMessage::ClearReconfigTimeouts(seq)).expect("Failed to contact worker")
                 }
             }
         }
@@ -301,7 +301,7 @@ impl<WP, D> TimeoutOrchestrator<WP, D> {
                 timeout_info: work,
             });
 
-            worker.send(work_msg).expect("Failed to send worker message");
+            worker.send_return(work_msg).expect("Failed to send worker message");
         }
     }
 
@@ -319,19 +319,22 @@ impl<WP, D> TimeoutOrchestrator<WP, D> {
                 for (work, worker) in iter::zip(separated_vecs, &self.worker_channel) {
                     let work_msg = TimeoutWorkerMessage::MessagesReceived(ReceivedRequest::PrePrepareRequestReceived(sender.clone(), work));
 
-                    worker.send(work_msg).expect("Failed to send worker message");
+                    worker.send_return(work_msg).expect("Failed to send worker message");
                 }
             }
             ReceivedRequest::Cst(sender, seq) => {
-                self.worker_channel[0].send(TimeoutWorkerMessage::MessagesReceived(ReceivedRequest::Cst(sender, seq)))
+                self.worker_channel[0]
+                    .send_return(TimeoutWorkerMessage::MessagesReceived(ReceivedRequest::Cst(sender, seq)))
                     .expect("Failed to send worker message");
             }
             ReceivedRequest::LT(sender, seq) => {
-                self.worker_channel[0].send(TimeoutWorkerMessage::MessagesReceived(ReceivedRequest::LT(sender, seq)))
+                self.worker_channel[0]
+                    .send_return(TimeoutWorkerMessage::MessagesReceived(ReceivedRequest::LT(sender, seq)))
                     .expect("Failed to send worker message");
             }
             ReceivedRequest::Reconfiguration(sender, seq) => {
-                self.worker_channel[0].send(TimeoutWorkerMessage::MessagesReceived(ReceivedRequest::Reconfiguration(sender.clone(), seq)))
+                self.worker_channel[0]
+                    .send_return(TimeoutWorkerMessage::MessagesReceived(ReceivedRequest::Reconfiguration(sender.clone(), seq)))
                     .expect("Failed to send worker message");
             }
         }
@@ -358,7 +361,7 @@ impl<WP, D> TimeoutOrchestrator<WP, D> {
         }
 
         for (work, worker) in iter::zip(separated_vecs, &self.worker_channel) {
-            worker.send(TimeoutWorkerMessage::ClearClientTimeouts(work)).expect("Failed to send worker message");
+            worker.send_return(TimeoutWorkerMessage::ClearClientTimeouts(work)).expect("Failed to send worker message");
         }
     }
 

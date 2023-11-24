@@ -4,7 +4,6 @@ use ::serde::{Deserialize, Serialize};
 use atlas_common::error::*;
 use atlas_common::globals::ReadOnly;
 use atlas_common::ordering::{SeqNo};
-use atlas_communication::message::StoredMessage;
 use atlas_smr_application::app::UpdateBatch;
 use atlas_smr_application::serialize::ApplicationData;
 use atlas_smr_application::state::divisible_state::DivisibleState;

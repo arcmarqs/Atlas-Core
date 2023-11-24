@@ -18,6 +18,8 @@ serialize_serde = ["serde"]
 serialize_capnp = ["atlas-capnp"]
 
 [dependencies]
+anyhow = "1.0.75"
+thiserror = "1.0.50"
 atlas-common = { path = "../Atlas-Common" }
 atlas-communication = { path = "../Atlas-Communication" }
 atlas-smr-application = { path = "../Atlas-SMR-Application" }

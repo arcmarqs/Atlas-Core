@@ -177,7 +177,7 @@ impl<O> RequestPreProcessingWorker<O> where O: Clone {
         }).collect();
 
         if !requests.is_empty() {
-            if let Err(err) = self.batch_production.try_send((PreProcessorOutputMessage::DeDupedOrderedRequests(requests), Instant::now())) {
+            if let Err(err) = self.batch_production.try_send_return((PreProcessorOutputMessage::DeDupedOrderedRequests(requests), Instant::now())) {
                 error!("Worker {} // Failed to send client requests to batch production: {:?}", self.worker_id, err);
             }
         }
@@ -199,7 +199,7 @@ impl<O> RequestPreProcessingWorker<O> where O: Clone {
         }).collect();
 
         if !requests.is_empty() {
-            if let Err(err) = self.batch_production.try_send((PreProcessorOutputMessage::DeDupedUnorderedRequests(requests), Instant::now())) {
+            if let Err(err) = self.batch_production.try_send_return((PreProcessorOutputMessage::DeDupedUnorderedRequests(requests), Instant::now())) {
                 error!("Worker {} // Failed to send unordered requests to batch production: {:?}", self.worker_id, err);
             }
         }
@@ -224,7 +224,7 @@ impl<O> RequestPreProcessingWorker<O> where O: Clone {
         debug!("Worker {} // Forwarded requests processed, out of {} left with {:?}", self.worker_id, initial_size, requests);
 
         if !requests.is_empty() {
-            if let Err(err) = self.batch_production.try_send((PreProcessorOutputMessage::DeDupedOrderedRequests(requests), Instant::now())) {
+            if let Err(err) = self.batch_production.try_send_return((PreProcessorOutputMessage::DeDupedOrderedRequests(requests), Instant::now())) {
                 error!("Worker {} // Failed to send forwarded requests to batch production: {:?}", self.worker_id, err);
             }
         }
@@ -264,7 +264,7 @@ impl<O> RequestPreProcessingWorker<O> where O: Clone {
             }
         }
 
-        tx.send((returned_timeouts, removed_timeouts)).expect("Failed to send timeouts to client");
+        tx.send_return((returned_timeouts, removed_timeouts)).expect("Failed to send timeouts to client");
     }
 
     /// Process a decided batch
@@ -338,6 +338,6 @@ pub struct RequestPreProcessingWorkerHandle<O>(ChannelSyncTx<PreProcessorWorkMes
 
 impl<O> RequestPreProcessingWorkerHandle<O> {
     pub fn send(&self, message: PreProcessorWorkMessage<O>) {
-        self.0.send((Instant::now(), message)).unwrap()
+        self.0.send_return((Instant::now(), message)).unwrap()
     }
 }

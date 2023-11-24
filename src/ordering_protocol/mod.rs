@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
+use anyhow::anyhow;
 
 use atlas_common::crypto::hash::Digest;
 use atlas_common::error::*;
@@ -30,7 +31,7 @@ pub type View<POP: PermissionedOrderingProtocolMessage> = <POP as PermissionedOr
 pub type ProtocolMessage<D, OP> = <OP as OrderingProtocolMessage<D>>::ProtocolMessage;
 pub type DecisionMetadata<D, OP> = <OP as OrderingProtocolMessage<D>>::ProofMetadata;
 
-pub struct OrderingProtocolArgs<D, NT>(pub ExecutorHandle<D>, pub Timeouts,
+pub struct OrderingProtocolArgs<D, NT>(pub NodeId, pub ExecutorHandle<D>, pub Timeouts,
                                        pub RequestPreProcessor<D::Request>,
                                        pub BatchOutput<D::Request>, pub Arc<NT>,
                                        pub Vec<NodeId>) where D: ApplicationData;
@@ -272,8 +273,7 @@ impl<MD, P, O> Decision<MD, P, O> {
     /// Returns an error when the sequence number of the decisions does not match
     pub fn merge_decisions(&mut self, other: Self) -> Result<()> {
         if self.seq != other.seq {
-            return Err(Error::simple_with_msg(ErrorKind::OrderProtocolDecision,
-                                              "The decisions have different sequence numbers, cannot merge"));
+            return Err(anyhow!("The decisions have different sequence numbers, cannot merge"));
         }
 
         let mut ordered_vec_builder = MaybeOrderedVecBuilder::from_existing(other.decision_info);

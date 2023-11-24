@@ -85,7 +85,7 @@ impl<O> RequestPreProcessor<O> {
 
         let (tx, rx) = channel::new_oneshot_channel();
 
-        self.0.send(PreProcessorMessage::CloneRequests(client_rqs, tx)).unwrap();
+        self.0.send_return(PreProcessorMessage::CloneRequests(client_rqs, tx)).unwrap();
 
         let result = rx.recv().unwrap();
 
@@ -99,7 +99,7 @@ impl<O> RequestPreProcessor<O> {
 
         let (tx, rx) = channel::new_oneshot_channel();
 
-        self.0.send(PreProcessorMessage::CollectAllPendingMessages(tx)).unwrap();
+        self.0.send_return(PreProcessorMessage::CollectAllPendingMessages(tx)).unwrap();
 
         let result = rx.recv().unwrap();
 
@@ -109,7 +109,7 @@ impl<O> RequestPreProcessor<O> {
     }
 
     pub fn process_timeouts(&self, timeouts: Vec<RqTimeout>, response: ChannelSyncTx<(Vec<RqTimeout>, Vec<RqTimeout>)>) {
-        self.0.send(PreProcessorMessage::TimeoutsReceived(timeouts, response)).unwrap();
+        self.0.send_return(PreProcessorMessage::TimeoutsReceived(timeouts, response)).unwrap();
     }
 }
 
