@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use atlas_common::channel::{ChannelSyncRx, ChannelSyncTx};
 use atlas_common::error::*;
+use atlas_common::ordering::SeqNo;
 use atlas_smr_application::state::divisible_state::{DivisibleState, InstallStateMessage};
 use crate::ordering_protocol::networking::serialize::NetworkView;
 
@@ -21,7 +22,7 @@ pub trait DivisibleStateTransfer<S, NT, PL>: StateTransferProtocol<S, NT, PL>
         where Self: Sized;
 
     /// Handle having received a state from the application
-    fn handle_state_desc_received_from_app(&mut self, descriptor: S::StateDescriptor)
+    fn handle_state_desc_received_from_app(&mut self, descriptor: S::StateDescriptor, seq_no: SeqNo)
                                               -> Result<()>;
 
 
@@ -29,7 +30,7 @@ pub trait DivisibleStateTransfer<S, NT, PL>: StateTransferProtocol<S, NT, PL>
                                               -> Result<()>;
 
     /// Handle the state being finished
-    fn handle_state_finished_reception(&mut self)
+    fn handle_state_finished_reception(&mut self, seq_no: SeqNo)
                                           -> Result<()>;
 
 }
