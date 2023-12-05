@@ -182,8 +182,8 @@ impl<NT, D, P, S, L, VT, NI, RM> FullNetworkNode<NI, RM, Service<D, P, S, L, VT>
         NT: FullNetworkNode<NI, RM, Service<D, P, S, L, VT>>, {
     type Config = NT::Config;
 
-    async fn bootstrap(network_info_provider: Arc<NI>, node_config: Self::Config) -> atlas_common::error::Result<Self> {
-        Ok(NodeWrap::from_node(NT::bootstrap(network_info_provider, node_config).await?))
+    async fn bootstrap(node_id: NodeId, network_info_provider: Arc<NI>, node_config: Self::Config) -> atlas_common::error::Result<Self> {
+        Ok(NodeWrap::from_node(NT::bootstrap(node_id, network_info_provider, node_config).await?))
     }
 }
 

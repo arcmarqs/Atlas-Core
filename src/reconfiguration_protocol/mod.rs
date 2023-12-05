@@ -49,7 +49,7 @@ pub enum QuorumAttemptJoinResponse {
 /// Requested by it
 #[derive(Debug)]
 pub enum QuorumAlterationResponse {
-    Successful(NodeId),
+    Successful(NodeId, usize),
     Failed(NodeId, AlterationFailReason),
 }
 
@@ -132,6 +132,12 @@ pub trait ReconfigurationProtocol: Send + Sync + 'static {
 
     /// Get the current quorum members of the system
     fn get_quorum_members(&self) -> Vec<NodeId>;
+
+    /// Get the current amount of faults the quorum can tolerate
+    fn get_current_f(&self) -> usize;
+
+    /// Get the current quorum view
+    fn quorum_state(&self) -> (Vec<NodeId>, usize);
 
     /// Check if a given join certificate is valid
     fn is_join_certificate_valid(&self, certificate: &QuorumJoinCert<Self::Serialization>) -> bool;
