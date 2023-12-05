@@ -14,7 +14,7 @@ pub enum ReconfigurationAttemptResult {
     AlreadyPartOfQuorum,
     CurrentlyReconfiguring(NodeId),
     InProgress,
-    Successful(Vec<NodeId>),
+    Successful,
 }
 
 /// The trait that defines the necessary operations for a given ordering protocol to be reconfigurable
