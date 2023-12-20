@@ -26,6 +26,9 @@ pub enum LTResult<D: ApplicationData> {
     RunLTP,
     NotNeeded,
     Running,
+    Ignored,
+    /// The log transfer protocol has reached a point where we can already say which is
+    /// the current seq number of the quorum
     InstallSeq(SeqNo),
     /// The log transfer protocol has finished and the ordering protocol should now
     /// be proceeded. The requests contained are requests that must be executed by the application
@@ -118,6 +121,9 @@ impl<D: ApplicationData> Debug for LTResult<D> {
             }
             LTResult::InstallSeq(seq) => {
                 write!(f, "LTPInstallSeq({:?})", seq)
+            }
+            LTResult::Ignored => {
+                write!(f, "Ignored Message")
             }
         }
     }
