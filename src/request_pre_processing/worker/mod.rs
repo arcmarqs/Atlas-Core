@@ -20,7 +20,7 @@ use crate::metric::{RQ_PP_ORCHESTRATOR_WORKER_PASSING_TIME_ID, RQ_PP_WORKER_DECI
 use crate::request_pre_processing::{operation_key, operation_key_raw, PreProcessorOutput, PreProcessorOutputMessage};
 use crate::timeouts::{RqTimeout, TimeoutKind, TimeoutPhase};
 
-const WORKER_QUEUE_SIZE: usize = 124;
+const WORKER_QUEUE_SIZE: usize = 128;
 const WORKER_THREAD_NAME: &str = "RQ-PRE-PROCESSING-WORKER-{}";
 
 pub type PreProcessorWorkMessageOuter<O> = (Instant, PreProcessorWorkMessage<O>);

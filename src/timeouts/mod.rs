@@ -17,7 +17,7 @@ use crate::timeouts::worker::{TimeoutWorker, TimeoutWorkerMessage};
 
 mod worker;
 
-const CHANNEL_SIZE: usize = 16384;
+const CHANNEL_SIZE: usize = 8192;
 
 ///Contains the requests that have just been timed out
 pub type Timeout = Vec<TimeoutKind>;
