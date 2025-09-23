@@ -116,7 +116,9 @@ pub trait DivisibleStateLog<S>: Send where S: DivisibleState {
     fn read_local_descriptor(&self) -> Result<Option<S::StateDescriptor>>;
 
     /// Read a part from the local state log
-    fn read_local_part(&self, part: S::PartDescription) -> Result<Option<S::StatePart>>;
+    fn read_local_part(&self, part: &S::PartDescription) -> Result<Option<S::StatePart>>;
+
+    fn read_local_parts(&self, parts: Vec<&S::PartDescription>) -> Result<Vec<Option<S::StatePart>>>;
 
     /// Write the descriptor of a state
     fn write_descriptor(&self, write_mode: OperationMode,
