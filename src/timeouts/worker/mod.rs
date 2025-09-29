@@ -414,7 +414,7 @@ impl TimeoutWorker {
 
     /// Remove all of the timeouts that are present in the given list (or all timeouts if there is no list)
     fn handle_clear_client_rqs(&mut self, requests: Option<Vec<ClientRqInfo>>) {
-        self.pending_timeouts.extract_if(|timeout, timeouts| {
+        self.pending_timeouts.extract_if(..,|timeout, timeouts| {
             timeouts.extract_if(0..,|rq| {
                 match &rq.info {
                     TimeoutKind::ClientRequestTimeout(rq_info) => {
@@ -437,7 +437,7 @@ impl TimeoutWorker {
     fn handle_clear_cst_rqs(&mut self, seq_no: Option<SeqNo>) {
         let mut total_removed = Vec::new();
 
-        self.pending_timeouts.extract_if(|timeout, timeout_rqs| {
+        self.pending_timeouts.extract_if(..,|timeout, timeout_rqs| {
             let mut removed: Vec<_> = timeout_rqs.extract_if(0..,|rq| {
                 match &rq.info {
                     TimeoutKind::Cst(rq_seq_no) => {
@@ -463,7 +463,7 @@ impl TimeoutWorker {
     fn handle_clear_reconfig_rqs(&mut self, seq_no: Option<SeqNo>) {
         let mut total_removed = Vec::new();
 
-        self.pending_timeouts.extract_if(|timeout, timeout_rqs| {
+        self.pending_timeouts.extract_if(.., |timeout, timeout_rqs| {
             let mut removed: Vec<_> = timeout_rqs.extract_if(0.., |rq| {
                 match &rq.info {
                     TimeoutKind::Reconfiguration(rq_seq_no) => {
