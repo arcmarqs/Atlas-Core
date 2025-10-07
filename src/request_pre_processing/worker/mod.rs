@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -44,6 +45,22 @@ pub enum PreProcessorWorkMessage<O> {
     ClonePendingRequests(Vec<ClientRqInfo>, OneShotTx<Vec<StoredRequestMessage<O>>>),
     /// Remove all requests associated with this client (due to a disconnection, for example)
     CleanClient(NodeId),
+}
+
+impl<O> Debug for PreProcessorWorkMessage<O> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ClientPoolOrderedRequestsReceived(arg0) => f.debug_tuple("ClientPoolOrderedRequestsReceived").finish(),
+            Self::ClientPoolUnorderedRequestsReceived(arg0) => f.debug_tuple("ClientPoolUnorderedRequestsReceived").finish(),
+            Self::ForwardedRequestsReceived(arg0) => f.debug_tuple("ForwardedRequestsReceived").finish(),
+            Self::StoppedRequestsReceived(arg0) => f.debug_tuple("StoppedRequestsReceived").finish(),
+            Self::TimeoutsReceived(arg0, arg1) => f.debug_tuple("TimeoutsReceived").finish(),
+            Self::DecidedBatch(arg0) => f.debug_tuple("DecidedBatch").finish(),
+            Self::CollectPendingMessages(arg0) => f.debug_tuple("CollectPendingMessages").finish(),
+            Self::ClonePendingRequests(arg0, arg1) => f.debug_tuple("ClonePendingRequests").finish(),
+            Self::CleanClient(arg0) => f.debug_tuple("CleanClient").finish(),
+        }
+    }
 }
 
 /// Each worker will be assigned a given set of clients
@@ -338,6 +355,9 @@ pub struct RequestPreProcessingWorkerHandle<O>(ChannelSyncTx<PreProcessorWorkMes
 
 impl<O> RequestPreProcessingWorkerHandle<O> {
     pub fn send(&self, message: PreProcessorWorkMessage<O>) {
+         if self.0.is_full() {
+            error!("COULD NOT INSERT MESSAGE {:?}", message);
+        }
         self.0.send_return((Instant::now(), message)).unwrap()
     }
 }
